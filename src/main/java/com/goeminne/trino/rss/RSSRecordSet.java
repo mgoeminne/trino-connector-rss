@@ -1,22 +1,20 @@
 package com.goeminne.trino.rss;
 
 import com.google.common.io.ByteSource;
-import com.google.common.io.Resources;
 import io.trino.spi.connector.RecordCursor;
 import io.trino.spi.connector.RecordSet;
 import io.trino.spi.type.Type;
 
 import java.net.MalformedURLException;
-import java.net.URI;
 import java.util.List;
 
 import static java.util.Objects.requireNonNull;
 
-public class RSSRecordSet implements RecordSet
+public abstract class RSSRecordSet implements RecordSet
 {
-    private final List<RSSColumnHandle> columnHandles;
-    private final List<Type> columnTypes;
-    private final ByteSource byteSource;
+    protected final List<RSSColumnHandle> columnHandles;
+    protected final List<Type> columnTypes;
+    protected final ByteSource byteSource;
 
     public RSSRecordSet(RSSSplit split, List<RSSColumnHandle> columnHandles)
     {
@@ -26,7 +24,7 @@ public class RSSRecordSet implements RecordSet
         this.columnTypes = columnHandles.stream().map(RSSColumnHandle::getColumnType).toList();
 
         try {
-            byteSource = Resources.asByteSource(URI.create(split.getUri()).toURL());
+            byteSource = new ResourceManager().asByteSource(split.getUri());
         }
         catch (MalformedURLException e) {
             throw new RuntimeException(e);
@@ -34,14 +32,7 @@ public class RSSRecordSet implements RecordSet
     }
 
     @Override
-    public List<Type> getColumnTypes()
-    {
+    public final List<Type> getColumnTypes() {
         return columnTypes;
-    }
-
-    @Override
-    public RecordCursor cursor()
-    {
-        return new RSSRecordCursor(columnHandles, byteSource);
     }
 }

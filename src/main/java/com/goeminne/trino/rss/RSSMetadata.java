@@ -1,9 +1,5 @@
 package com.goeminne.trino.rss;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.inject.Inject;
 import io.trino.spi.TrinoException;
 import io.trino.spi.connector.ColumnHandle;
 import io.trino.spi.connector.ColumnMetadata;
@@ -16,29 +12,22 @@ import io.trino.spi.connector.SchemaTableName;
 import io.trino.spi.connector.SchemaTablePrefix;
 import io.trino.spi.connector.TableNotFoundException;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 import static io.trino.spi.StandardErrorCode.NOT_SUPPORTED;
 import static java.util.Objects.requireNonNull;
 
 public class RSSMetadata implements ConnectorMetadata {
-    private final RSSClient exampleClient;
+    private final RSSClient rssClient;
 
-    @Inject
-    public RSSMetadata(RSSClient exampleClient) {
-        this.exampleClient = requireNonNull(exampleClient, "exampleClient is null");
+    public RSSMetadata(RSSClient rssClient) {
+        this.rssClient = requireNonNull(rssClient, "exampleClient is null");
     }
 
     @Override
     public List<String> listSchemaNames(ConnectorSession session) { return listSchemaNames(); }
 
-    public List<String> listSchemaNames()
-    {
-        return ImmutableList.copyOf(exampleClient.getSchemaNames());
-    }
+    private List<String> listSchemaNames() { return List.of("default"); }
 
     @Override
     public RSSTableHandle getTableHandle(ConnectorSession session, SchemaTableName tableName, Optional<ConnectorTableVersion> startVersion, Optional<ConnectorTableVersion> endVersion) {
@@ -50,7 +39,7 @@ public class RSSMetadata implements ConnectorMetadata {
             return null;
         }
 
-        RSSTable table = exampleClient.getTable(tableName.getSchemaName(), tableName.getTableName());
+        RSSTable table = rssClient.getTable(tableName.getSchemaName(), tableName.getTableName());
         if (table == null) {
             return null;
         }
@@ -67,16 +56,16 @@ public class RSSMetadata implements ConnectorMetadata {
     @Override
     public List<SchemaTableName> listTables(ConnectorSession session, Optional<String> optionalSchemaName)
     {
-        Set<String> schemaNames = optionalSchemaName.map(ImmutableSet::of)
-                .orElseGet(() -> ImmutableSet.copyOf(exampleClient.getSchemaNames()));
+        Set<String> schemaNames = optionalSchemaName.map(Set::of)
+                .orElseGet(() -> Set.copyOf(rssClient.getSchemaNames()));
 
-        ImmutableList.Builder<SchemaTableName> builder = ImmutableList.builder();
+        List<SchemaTableName> ret = new ArrayList<>();
         for (String schemaName : schemaNames) {
-            for (String tableName : exampleClient.getTableNames(schemaName)) {
-                builder.add(new SchemaTableName(schemaName, tableName));
+            for (String tableName : rssClient.getTableNames(schemaName)) {
+                ret.add(new SchemaTableName(schemaName, tableName));
             }
         }
-        return builder.build();
+        return ret;
     }
 
     @Override
@@ -84,25 +73,26 @@ public class RSSMetadata implements ConnectorMetadata {
     {
         RSSTableHandle exampleTableHandle = (RSSTableHandle) tableHandle;
 
-        RSSTable table = exampleClient.getTable(exampleTableHandle.getSchemaName(), exampleTableHandle.getTableName());
+        RSSTable table = rssClient.getTable(exampleTableHandle.schemaName(), exampleTableHandle.tableName());
         if (table == null) {
             throw new TableNotFoundException(exampleTableHandle.toSchemaTableName());
         }
 
-        ImmutableMap.Builder<String, ColumnHandle> columnHandles = ImmutableMap.builder();
+        Map<String, ColumnHandle> columnHandles = new HashMap<>();
+
         int index = 0;
         for (ColumnMetadata column : table.getColumnsMetadata()) {
             columnHandles.put(column.getName(), new RSSColumnHandle(column.getName(), column.getType(), index));
             index++;
         }
-        return columnHandles.buildOrThrow();
+        return columnHandles;
     }
 
     @Override
     public Map<SchemaTableName, List<ColumnMetadata>> listTableColumns(ConnectorSession session, SchemaTablePrefix prefix)
     {
         requireNonNull(prefix, "prefix is null");
-        ImmutableMap.Builder<SchemaTableName, List<ColumnMetadata>> columns = ImmutableMap.builder();
+        Map<SchemaTableName, List<ColumnMetadata>> columns = new HashMap<>();
         for (SchemaTableName tableName : listTables(session, prefix)) {
             ConnectorTableMetadata tableMetadata = getTableMetadata(tableName);
             // table can disappear during listing operation
@@ -110,7 +100,7 @@ public class RSSMetadata implements ConnectorMetadata {
                 columns.put(tableName, tableMetadata.getColumns());
             }
         }
-        return columns.buildOrThrow();
+        return columns;
     }
 
     private ConnectorTableMetadata getTableMetadata(SchemaTableName tableName)
@@ -119,7 +109,7 @@ public class RSSMetadata implements ConnectorMetadata {
             return null;
         }
 
-        RSSTable table = exampleClient.getTable(tableName.getSchemaName(), tableName.getTableName());
+        RSSTable table = rssClient.getTable(tableName.getSchemaName(), tableName.getTableName());
         if (table == null) {
             return null;
         }
@@ -132,7 +122,7 @@ public class RSSMetadata implements ConnectorMetadata {
         if (prefix.getTable().isEmpty()) {
             return listTables(session, prefix.getSchema());
         }
-        return ImmutableList.of(prefix.toSchemaTableName());
+        return List.of(prefix.toSchemaTableName());
     }
 
     @Override

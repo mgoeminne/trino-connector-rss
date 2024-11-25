@@ -9,11 +9,7 @@ import java.util.Objects;
 
 import static java.util.Objects.requireNonNull;
 
-public final class RSSTableHandle implements ConnectorTableHandle
-{
-    private final String schemaName;
-    private final String tableName;
-
+public record RSSTableHandle(String schemaName, String tableName) implements ConnectorTableHandle {
     @JsonCreator
     public RSSTableHandle(
             @JsonProperty("schemaName") String schemaName,
@@ -22,16 +18,21 @@ public final class RSSTableHandle implements ConnectorTableHandle
         this.tableName = requireNonNull(tableName, "tableName is null");
     }
 
+    @Override
     @JsonProperty
-    public String getSchemaName() { return schemaName; }
-
-    @JsonProperty
-    public String getTableName() { return tableName; }
-
-    public SchemaTableName toSchemaTableName() { return new SchemaTableName(schemaName, tableName); }
+    public String schemaName() {
+        return schemaName;
+    }
 
     @Override
-    public int hashCode() { return Objects.hash(schemaName, tableName); }
+    @JsonProperty
+    public String tableName() {
+        return tableName;
+    }
+
+    public SchemaTableName toSchemaTableName() {
+        return new SchemaTableName(schemaName, tableName);
+    }
 
     @Override
     public boolean equals(Object obj) {
@@ -48,5 +49,7 @@ public final class RSSTableHandle implements ConnectorTableHandle
     }
 
     @Override
-    public String toString() { return schemaName + ":" + tableName; }
+    public String toString() {
+        return schemaName + ":" + tableName;
+    }
 }

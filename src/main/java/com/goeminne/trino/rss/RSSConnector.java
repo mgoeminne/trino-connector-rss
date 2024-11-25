@@ -10,26 +10,38 @@ import io.trino.spi.connector.ConnectorSplitManager;
 import io.trino.spi.connector.ConnectorTransactionHandle;
 import io.trino.spi.transaction.IsolationLevel;
 
+import java.net.URI;
+import java.util.List;
+
 import static java.util.Objects.requireNonNull;
 
 public class RSSConnector implements Connector {
 
     private final LifeCycleManager lifeCycleManager;
-    private final RSSMetadata metadata;
+    private RSSMetadata metadata;
     private final RSSSplitManager splitManager;
     private final RSSRecordSetProvider recordSetProvider;
 
     @Inject
     public RSSConnector(
             LifeCycleManager lifeCycleManager,
-            RSSMetadata metadata,
             RSSSplitManager splitManager,
             RSSRecordSetProvider recordSetProvider) {
 
         this.lifeCycleManager = requireNonNull(lifeCycleManager, "lifeCycleManager is null");
-        this.metadata = requireNonNull(metadata, "metadata is null");
         this.splitManager = requireNonNull(splitManager, "splitManager is null");
         this.recordSetProvider = requireNonNull(recordSetProvider, "recordSetProvider is null");
+
+        RSSClient client = new RSSClient(new RSSConfig());
+        this.metadata = new RSSMetadata(client);
+    }
+
+    public RSSConnector withUris(List<URI> uris) {
+        RSSConfig config = new RSSConfig();
+        config.setURIs(uris);
+        RSSClient client = new RSSClient(config);
+        this.metadata = new RSSMetadata(client);
+        return this;
     }
 
     @Override

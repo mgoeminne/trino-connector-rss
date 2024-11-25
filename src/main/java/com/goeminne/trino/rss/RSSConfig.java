@@ -4,18 +4,28 @@ import io.airlift.configuration.Config;
 import jakarta.validation.constraints.NotNull;
 
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
 
 public class RSSConfig {
-    private URI metadata;
+    private List<URI> uris;
 
-    @NotNull
-    public URI getMetadata() {
-        return metadata;
+    public RSSConfig() {
+        this.uris = new ArrayList<>();
     }
 
-    @Config("metadata-uri")
-    public RSSConfig setMetadata(URI metadata) {
-        this.metadata = metadata;
+    @NotNull
+    public List<URI> getURIs() {
+        return uris;
+    }
+
+    public void addURI(URI uri) {
+        this.uris.add(uri);
+    }
+
+    @Config("rss.uris")
+    public RSSConfig setURIs(List<URI> uris) {
+        this.uris = uris;
         return this;
     }
 }

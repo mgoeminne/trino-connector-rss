@@ -20,11 +20,7 @@ public class RSSTable
     private final List<URI> sources;
 
     @JsonCreator
-    public RSSTable(
-            @JsonProperty("name") String name,
-            @JsonProperty("columns") List<RSSColumn> columns,
-            @JsonProperty("sources") List<URI> sources)
-    {
+    public RSSTable(String name, List<RSSColumn> columns, List<URI> sources) {
         checkArgument(!isNullOrEmpty(name), "name is null or is empty");
         this.name = requireNonNull(name, "name is null");
         this.columns = ImmutableList.copyOf(requireNonNull(columns, "columns is null"));
@@ -37,26 +33,20 @@ public class RSSTable
         this.columnsMetadata = columnsMetadata.build();
     }
 
-    @JsonProperty
-    public String getName()
-    {
+    public String getName() {
         return name;
     }
 
-    @JsonProperty
-    public List<RSSColumn> getColumns()
-    {
+    public List<RSSColumn> getColumns() {
         return columns;
     }
 
     @JsonProperty
-    public List<URI> getSources()
-    {
+    public List<URI> getSources() {
         return sources;
     }
 
-    public List<ColumnMetadata> getColumnsMetadata()
-    {
+    public List<ColumnMetadata> getColumnsMetadata() {
         return columnsMetadata;
     }
 }

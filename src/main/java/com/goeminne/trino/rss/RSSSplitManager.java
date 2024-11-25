@@ -21,7 +21,6 @@ import static java.util.stream.Collectors.toCollection;
 public class RSSSplitManager implements ConnectorSplitManager {
     private final RSSClient rssClient;
 
-    @Inject
     public RSSSplitManager(RSSClient rssClient)
     {
         this.rssClient = requireNonNull(rssClient, "rssClient is null");
@@ -35,14 +34,14 @@ public class RSSSplitManager implements ConnectorSplitManager {
             DynamicFilter dynamicFilter,
             Constraint constraint) {
         RSSTableHandle tableHandle = (RSSTableHandle) connectorTableHandle;
-        RSSTable table = rssClient.getTable(tableHandle.getSchemaName(), tableHandle.getTableName());
+        RSSTable table = rssClient.getTable(tableHandle.schemaName(), tableHandle.tableName());
 
         // this can happen if table is removed during a query
         if (table == null) {
             throw new TableNotFoundException(tableHandle.toSchemaTableName());
         }
 
-        List<RSSSplit> splits = table.getSources().stream().map(uri -> new RSSSplit(uri.toString())).collect(toCollection(ArrayList::new));
+        List<RSSSplit> splits = table.getSources().stream().map(uri -> new RSSSplit(uri)).collect(toCollection(ArrayList::new));
         Collections.shuffle(splits);
 
         return new FixedSplitSource(splits);
