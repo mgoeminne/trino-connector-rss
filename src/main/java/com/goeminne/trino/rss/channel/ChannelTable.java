@@ -21,7 +21,7 @@ public class ChannelTable extends RSSTable {
             new RSSColumn("description", VarcharType.VARCHAR),
             new RSSColumn("language", VarcharType.VARCHAR),
             new RSSColumn("webmaster", VarcharType.VARCHAR),
-            new RSSColumn("pub_date", TimestampType.TIMESTAMP_SECONDS)
+            new RSSColumn("pub_date", TimestampType.TIMESTAMP_MILLIS)
         );
     }
 }

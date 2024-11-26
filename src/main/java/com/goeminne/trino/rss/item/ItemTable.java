@@ -21,7 +21,7 @@ public class ItemTable extends RSSTable {
             new RSSColumn("title", VarcharType.VARCHAR),
             new RSSColumn("link", VarcharType.VARCHAR),
             new RSSColumn("description", VarcharType.VARCHAR),
-            new RSSColumn("pub_date", TimestampType.TIMESTAMP_SECONDS),
+            new RSSColumn("pub_date", TimestampType.TIMESTAMP_MILLIS),
             new RSSColumn("guid", VarcharType.VARCHAR),
             new RSSColumn("category", VarcharType.VARCHAR)
         );

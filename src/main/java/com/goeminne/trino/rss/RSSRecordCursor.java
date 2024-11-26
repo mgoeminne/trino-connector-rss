@@ -6,6 +6,7 @@ import com.google.common.io.CountingInputStream;
 import io.airlift.slice.Slice;
 import io.airlift.slice.Slices;
 import io.trino.spi.connector.RecordCursor;
+import io.trino.spi.type.TimestampType;
 import io.trino.spi.type.Type;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -32,7 +33,6 @@ import static io.trino.spi.type.VarcharType.createUnboundedVarcharType;
 public abstract class RSSRecordCursor<T extends RSSRow> implements RecordCursor
 {
     private final List<RSSColumnHandle> columnHandles;
-    private final int[] fieldToColumnIndex;
 
     private final Iterator<T> elements;
     private final long totalBytes;
@@ -41,13 +41,6 @@ public abstract class RSSRecordCursor<T extends RSSRow> implements RecordCursor
 
     public RSSRecordCursor(List<RSSColumnHandle> columnHandles, ByteSource byteSource) {
         this.columnHandles = columnHandles;
-
-        fieldToColumnIndex = new int[columnHandles.size()];
-        for (int i = 0; i < columnHandles.size(); i++) {
-            RSSColumnHandle columnHandle = columnHandles.get(i);
-            fieldToColumnIndex[i] = columnHandle.getOrdinalPosition();
-            System.out.println("Field #" + i + " associated with column handle " + columnHandle.getColumnName() + " (" + columnHandle.getOrdinalPosition() + ")");
-        }
 
         try (CountingInputStream input = new CountingInputStream(byteSource.openStream())) {
             elements = toIterator(byteSource);
@@ -90,9 +83,7 @@ public abstract class RSSRecordCursor<T extends RSSRow> implements RecordCursor
 
     private String getFieldValue(int field) {
         checkState(fields != null, "Cursor has not been advanced yet");
-
-        int columnIndex = fieldToColumnIndex[field];
-        return fields.get(columnIndex);
+        return fields.get(field);
     }
 
     @Override
@@ -103,6 +94,19 @@ public abstract class RSSRecordCursor<T extends RSSRow> implements RecordCursor
 
     @Override
     public long getLong(int field) {
+        Type fieldType = getType(field);
+
+        if(List.of(
+                TimestampType.TIMESTAMP_SECONDS,
+                TimestampType.TIMESTAMP_MILLIS,
+                TimestampType.TIMESTAMP_MICROS,
+                TimestampType.TIMESTAMP_NANOS,
+                TimestampType.TIMESTAMP_PICOS
+        ).contains(fieldType)) {
+            Instant i = Instant.parse(getFieldValue(field));
+            return (i.getEpochSecond() * 1000000 + i.getNano() / 1000);
+        }
+
         checkFieldType(field, BIGINT);
         return Long.parseLong(getFieldValue(field));
     }
@@ -155,9 +159,16 @@ public abstract class RSSRecordCursor<T extends RSSRow> implements RecordCursor
                 "yyyy-MM-dd'T'HH:mm:ss Z",
                 "yyyy-MM-dd HH:mm:ss",
                 "yyyy-MM-dd HH:mm:ss Z",
+                "yyyy-MM-dd HH:mm",
+                "yyyy-MM-dd HH:mm Z",
+                "yyyy-MM",
+                "yyyy-MM Z",
                 "EEEE, dd MMM yyyy HH:mm:ss",
                 "EEEE, dd MMM yyyy HH:mm:ss z",
-                "EEEE, dd MMM yyyy HH:mm:ss Z"
+                "EEEE, dd MMM yyyy HH:mm:ss Z",
+                "EEEE, dd MMM yyyy HH:mm",
+                "EEEE, dd MMM yyyy HH:mm z",
+                "EEEE, dd MMM yyyy HH:mm Z"
         );
 
         List<Locale> locales = List.of(DateFormat.getAvailableLocales());
@@ -170,11 +181,11 @@ public abstract class RSSRecordCursor<T extends RSSRow> implements RecordCursor
         });
 
         return results
-               .stream()
-               .filter(Optional::isPresent)
-               .findFirst()
-               .map(Optional::get)
-               .get();
+           .stream()
+           .filter(Optional::isPresent)
+           .findFirst()
+           .map(Optional::get)
+           .orElseThrow(() -> new IllegalArgumentException("Invalid date: " + date));
     }
 
     private static Optional<Instant> parseToInstant(String dateString, String pattern, Locale locale) {

@@ -2,6 +2,7 @@ package com.goeminne.trino.rss;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.inject.Inject;
 import io.trino.spi.HostAddress;
 import io.trino.spi.connector.ConnectorSplit;
 
@@ -47,5 +48,10 @@ public class RSSSplit implements ConnectorSplit {
         return INSTANCE_SIZE
                 + estimatedSizeOf(uri.toString())
                 + estimatedSizeOf(addresses, HostAddress::getRetainedSizeInBytes);
+    }
+
+    @Override
+    public String toString() {
+        return uri.toString();
     }
 }
