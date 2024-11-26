@@ -31,8 +31,26 @@ Please note multiple RSS feeds can be used simultaneously. You simply have to de
 docker run -p 8080:8080 --mount type=bind,source="/home/myself/rss.properties",target="/etc/trino/catalog/rss.properties" --mount type=bind,source="/home/myself/project/target/trino-connector-rss-X.Y.jar",target="/etc/trino/plugin/rss.jar" --name trino trinodb/trino:464
 ```
 
-docker run -p 8080:8080 --mount type=bind,source="C:\Users\mgoem\Downloads\rss.properties",target="/etc/trino/catalog/rss.properties" --mount type=bind,source="C:\Users\mgoem\IdeaProjects\trino-connector-rss\target\trino-connector-rss-1.0-SNAPSHOT-jar-with-dependencies.jar",target="/data/trino/plugin/rss/rss.jar" --name trino trinodb/trino:464
-
-
 # License
 
+MIT License
+
+Copyright (c) 2024 Mathieu Goeminne
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
